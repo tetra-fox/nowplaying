@@ -52,13 +52,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y musl-tools
           if [[ "${{ matrix.target }}" == riscv64* ]]; then
-            sudo apt-get install -y gcc-riscv64-linux-gnu
+            curl -sL https://musl.cc/riscv64-linux-musl-cross.tgz | tar xz -C /opt
+            echo "/opt/riscv64-linux-musl-cross/bin" >> $GITHUB_PATH
           fi
 
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
         env:
-          CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_MUSL_LINKER: riscv64-linux-gnu-gcc
+          CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_MUSL_LINKER: riscv64-linux-musl-gcc
 
       - name: Rename binary
         run: |
