@@ -136,10 +136,20 @@ async fn handle_socket(mut socket: WebSocket, state: AppState) {
         return;
     }
 
-    while rx.changed().await.is_ok() {
-        let track = rx.borrow_and_update().clone();
-        if send_track(&mut socket, &track).await.is_err() {
-            break;
+    loop {
+        tokio::select! {
+            changed = rx.changed() => {
+                if changed.is_err() {
+                    break;
+                }
+                let track = rx.borrow_and_update().clone();
+                if send_track(&mut socket, &track).await.is_err() {
+                    break;
+                }
+            }
+            _msg = socket.recv() => {
+                break;
+            }
         }
     }
 }
