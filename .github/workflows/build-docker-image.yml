@@ -39,7 +39,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
-          platforms: linux/amd64,linux/arm64,linux/riscv64
+          platforms: linux/amd64,linux/arm64
           context: .
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

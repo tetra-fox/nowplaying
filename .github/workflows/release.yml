@@ -18,9 +18,6 @@ jobs:
           - target: aarch64-unknown-linux-musl
             os: ubuntu-24.04-arm
             artifact: nowplaying-linux-arm64
-          - target: riscv64gc-unknown-linux-musl
-            os: ubuntu-latest
-            artifact: nowplaying-linux-riscv64
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             artifact: nowplaying-windows-amd64.exe
@@ -46,20 +43,14 @@ jobs:
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
 
-      - name: Install Linux build tools
+      - name: Install musl-tools
         if: contains(matrix.target, 'musl')
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-          if [[ "${{ matrix.target }}" == riscv64* ]]; then
-            curl -sL https://musl.cc/riscv64-linux-musl-cross.tgz | tar xz -C /opt
-            echo "/opt/riscv64-linux-musl-cross/bin" >> $GITHUB_PATH
-          fi
 
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
-        env:
-          CARGO_TARGET_RISCV64GC_UNKNOWN_LINUX_MUSL_LINKER: riscv64-linux-musl-gcc
 
       - name: Rename binary
         run: |

@@ -7,7 +7,6 @@ RUN apt-get update && apt-get install -y musl-tools && rm -rf /var/lib/apt/lists
 RUN case "$TARGETARCH" in \
       amd64) echo x86_64-unknown-linux-musl ;; \
       arm64) echo aarch64-unknown-linux-musl ;; \
-      riscv64) echo riscv64gc-unknown-linux-musl ;; \
     esac > /rust-target && \
     rustup target add $(cat /rust-target)
 
