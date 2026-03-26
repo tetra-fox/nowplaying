@@ -132,8 +132,10 @@ async fn handle_socket(mut socket: WebSocket, state: AppState) {
     let mut rx = state.track_rx;
 
     let current = rx.borrow_and_update().clone();
-    if send_track(&mut socket, &current).await.is_err() {
-        return;
+    if current != Track::default() {
+        if send_track(&mut socket, &current).await.is_err() {
+            return;
+        }
     }
 
     loop {
