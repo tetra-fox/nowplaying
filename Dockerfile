@@ -1,26 +1,19 @@
 FROM rust:slim AS builder
 
-ARG TARGETARCH
-
 RUN apt-get update && apt-get install -y musl-tools && rm -rf /var/lib/apt/lists/*
-
-RUN case "$TARGETARCH" in \
-      amd64) echo x86_64-unknown-linux-musl ;; \
-      arm64) echo aarch64-unknown-linux-musl ;; \
-    esac > /rust-target && \
-    rustup target add $(cat /rust-target)
+RUN rustup target add $(uname -m)-unknown-linux-musl
 
 WORKDIR /app
 
 COPY Cargo.toml Cargo.lock ./
 RUN mkdir src && echo "fn main() {}" > src/main.rs
-RUN cargo build --release --target $(cat /rust-target)
+RUN cargo build --release --target $(uname -m)-unknown-linux-musl
 RUN rm -rf src
 
 COPY src ./src
 RUN touch src/main.rs
-RUN cargo build --release --target $(cat /rust-target) && \
-    cp target/$(cat /rust-target)/release/nowplaying /app/nowplaying
+RUN cargo build --release --target $(uname -m)-unknown-linux-musl && \
+    cp target/$(uname -m)-unknown-linux-musl/release/nowplaying /app/nowplaying
 
 FROM alpine:3
 
