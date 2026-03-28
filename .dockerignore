@@ -4,6 +4,9 @@ target/
 **/*.rs.bk
 *.pdb
 .env
+.env.*
 .git/
 .gitignore
 .github/
+docker-compose.yml
+LICENSE
