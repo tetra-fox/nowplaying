@@ -12,23 +12,23 @@ jobs:
     strategy:
       matrix:
         include:
-          - target: x86_64-unknown-linux-musl
-            os: ubuntu-latest
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
             artifact: nowplaying-linux-amd64
-          - target: aarch64-unknown-linux-musl
-            os: ubuntu-24.04-arm
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
             artifact: nowplaying-linux-arm64
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
             artifact: nowplaying-windows-amd64.exe
-          - target: aarch64-pc-windows-msvc
-            os: windows-latest
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
             artifact: nowplaying-windows-arm64.exe
-          - target: x86_64-apple-darwin
-            os: macos-latest
+          - os: macos-latest
+            target: x86_64-apple-darwin
             artifact: nowplaying-macos-amd64
-          - target: aarch64-apple-darwin
-            os: macos-latest
+          - os: macos-latest
+            target: aarch64-apple-darwin
             artifact: nowplaying-macos-arm64
 
     runs-on: ${{ matrix.os }}
@@ -54,7 +54,7 @@ jobs:
 
       - name: Rename binary
         run: |
-          src=target/${{ matrix.target }}/release/nowplaying
+          src="target/${{ matrix.target }}/release/nowplaying"
           [[ "${{ matrix.os }}" == windows-* ]] && src="${src}.exe"
           mv "$src" "${{ matrix.artifact }}"
 
@@ -64,8 +64,30 @@ jobs:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact }}
 
-  release:
+  macos-universal:
     needs: build
+    runs-on: macos-latest
+    steps:
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: nowplaying-macos-*
+          merge-multiple: true
+
+      - name: Create universal binary
+        run: |
+          lipo -create -output nowplaying-macos-universal \
+            nowplaying-macos-amd64 nowplaying-macos-arm64
+          chmod +x nowplaying-macos-universal
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: nowplaying-macos-universal
+          path: nowplaying-macos-universal
+
+  release:
+    needs: [build, macos-universal]
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
