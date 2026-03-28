@@ -21,7 +21,8 @@ tiny websocket server that broadcasts your currently playing song
     "name": "underscores"
   },
   "album": {
-    "mbid": "fa198feb-af0b-4d07-a65f-3f53fb8bff46", "name": "U"
+    "mbid": "fa198feb-af0b-4d07-a65f-3f53fb8bff46",
+    "name": "U"
   },
   "image": {
     "small": "https://lastfm.freetls.fastly.net/i/u/34s/82573426631c6de14959f4753eafe666.jpg",
