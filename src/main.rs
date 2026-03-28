@@ -9,55 +9,20 @@ use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::response::IntoResponse;
 use axum::routing::get;
 use reqwest::Client;
-use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use tokio::sync::{Notify, watch};
 use tokio::time;
 
-#[derive(Debug, Clone, Default, Serialize, PartialEq)]
-struct Track {
-    artist: String,
-    name: String,
-    #[serde(rename = "nowPlaying")]
-    now_playing: bool,
-}
-
-#[derive(Deserialize)]
-struct LastFmResponse {
-    recenttracks: RecentTracks,
-}
-
-#[derive(Deserialize)]
-struct RecentTracks {
-    track: Vec<LastFmTrack>,
-}
-
-#[derive(Deserialize)]
-struct LastFmTrack {
-    artist: LastFmArtist,
-    name: String,
-    #[serde(rename = "@attr")]
-    attr: Option<serde_json::Value>,
-}
-
-#[derive(Deserialize)]
-struct LastFmArtist {
-    #[serde(rename = "#text")]
-    text: String,
-}
-
-impl From<&LastFmTrack> for Track {
-    fn from(t: &LastFmTrack) -> Self {
-        Self {
-            artist: t.artist.text.clone(),
-            name: t.name.clone(),
-            now_playing: t.attr.is_some(),
-        }
-    }
-}
+mod track;
+use track::Track;
 
 async fn fetch_track(client: &Client, url: &str) -> reqwest::Result<Option<Track>> {
-    let data: LastFmResponse = client.get(url).send().await?.json().await?;
-    Ok(data.recenttracks.track.first().map(Track::from))
+    let data: Value = client.get(url).send().await?.json().await?;
+    Ok(data
+        .get("recenttracks")
+        .and_then(|rt| rt.get("track"))
+        .and_then(|tracks| tracks.get(0))
+        .and_then(|v| serde_json::from_value(v.clone()).ok()))
 }
 
 struct ConnectionGuard {
@@ -132,10 +97,8 @@ async fn handle_socket(mut socket: WebSocket, state: AppState) {
     let mut rx = state.track_rx;
 
     let current = rx.borrow_and_update().clone();
-    if current != Track::default() {
-        if send_track(&mut socket, &current).await.is_err() {
-            return;
-        }
+    if current != Track::default() && send_track(&mut socket, &current).await.is_err() {
+        return;
     }
 
     loop {
