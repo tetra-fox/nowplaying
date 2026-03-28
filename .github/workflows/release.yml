@@ -40,14 +40,19 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install Rust target
-        run: rustup target add ${{ matrix.target }}
+      - name: Set up Rust
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup target add ${{ matrix.target }}
 
       - name: Install musl-tools
         if: contains(matrix.target, 'musl')
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
+
+      - name: Restore cargo cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Build
         run: cargo build --release --target ${{ matrix.target }}
